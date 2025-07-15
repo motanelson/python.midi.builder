@@ -44,14 +44,22 @@ DURACAO_NOTA = TICKS_PER_BEAT  # cada símbolo = semínima
 
 # ---------- Funções utilitárias ----------
 def toca_notas(track, notas, ticks):
-    """Adiciona eventos note_on / note_off para uma lista de notas."""
-    # Todas as note_on ao mesmo tempo
+    """Adiciona eventos note_on / note_off para uma lista de notas, com pausa entre eventos."""
+    DURACAO_NOTA = int(ticks * 0.75)  # 75% do tempo = nota
+    PAUSA = ticks - DURACAO_NOTA      # 25% = silêncio
+
+    # Toca notas simultâneas (acorde ou nota única)
     for n in notas:
         track.append(Message('note_on', note=n, velocity=80, time=0))
-    # note_off: 1.º com duração, restantes a 0 para sair simultâneo
+    # Desliga as notas com duração definida
     for i, n in enumerate(notas):
-        off_time = ticks if i == 0 else 0
-        track.append(Message('note_off', note=n, velocity=64, time=off_time))
+        time = DURACAO_NOTA if i == 0 else 0  # só 1.º tem tempo
+        track.append(Message('note_off', note=n, velocity=64, time=time))
+
+    # Pausa entre notas/acordes
+    if PAUSA > 0:
+        # Pausa = evento 'espera' sem tocar nada
+        track.append(Message('note_on', note=0, velocity=0, time=PAUSA))
 
 def converter_txt_para_midi(ficheiro_txt: Path):
     if not ficheiro_txt.exists():
